@@ -18,8 +18,11 @@ ifneq ($(filter info upload,$(MAKECMDGOALS)),$())
 ifndef ROLE
 $(error  ROLE not defined)
 endif
-ARN:=$(shell aws iam get-role --role-name $(ROLE)  --profile $(PROFILE) --region $(REGION)   --query 'Role.Arn' --output text)
-
+#ARN:=$(shell aws iam get-role --role-name $(ROLE)  --profile $(PROFILE) --region $(REGION)   --query 'Role.Arn' --output text)
+ARN:=$(shell aws iam get-role --role-name $(ROLE)  --profile $(PROFILE) --region $(REGION)   --query 'Role.Arn' --output text  2> /dev/null)
+ifeq "$(ARN)" ""
+$(error "ARN not found. Role '$(ROLE)' is probably not defined")
+endif
 endif
 
 ROLE:=lambda_basic_execution
