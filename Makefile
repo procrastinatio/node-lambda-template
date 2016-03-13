@@ -9,6 +9,10 @@ $(error FUNCTION_NAME not defined)
 endif
 endif
 
+ifdef payload
+PAYLOAD:=$(shell cat $(payload))
+endif
+
 PROFILE:=default
 REGION_FROM_PROFILE=$(shell aws configure get region --profile  $(PROFILE) )
 REGION := $(shell if [ '$(REGION_FROM_PROFILE)' != '' ]; then echo '$(REGION_FROM_PROFILE)'; else echo 'eu-west-1'; fi)
@@ -38,10 +42,11 @@ help:
 	@echo "Possible targets:"
 	@echo "- list               List all Lambda function within the region"
 	@echo "- list-event-source  List event source mappings for function $(FUNCTION_NAME)"
-	@echo "- get                Get the Lambda function named $(FUNCTION_NAME)"
+	@echo "- get                Get the Lambda function $(FUNCTION_NAME)"
 	@echo "- upload             Build, create and upload Lambda function named $(FUNCTION_NAME)"
-	@echo "- update             Subsequent update of Lambda funciton named $(FUNCTION_NAME)"
-	@echo "- delete             Delete Lambda funciton named $(FUNCTION_NAME)"
+	@echo "- update             Subsequent update of Lambda function $(FUNCTION_NAME)"
+	@echo "- invokde            Invoke function $(FUNCTION_NAME) with payload $(payload)"
+	@echo "- delete             Delete Lambda function $(FUNCTION_NAME)"
 	@echo
 	@echo "Variables:"
 	@echo "PROFILE:             ${PROFILE}"
@@ -66,11 +71,13 @@ get:
 		--function-name $(FUNCTION_NAME)
 
 invoke:
-	aws lambda invoke-async \
+	aws lambda invoke \
 		--region $(REGION) \
 		--profile $(PROFILE) \
 		--function-name $(FUNCTION_NAME) \
-		--invoke-args $(payload)
+		--payload  '$(PAYLOAD)' \
+		--log-type Tail \
+		/dev/stdout
 
 list: 
 	echo $(PROFILE) ${REGION}
@@ -93,7 +100,7 @@ update:
 		--zip-file fileb://MyLambda.zip
 
 upload:
-	@npm install
+	@npm install 
 	@zip -r ./MyLambda.zip * -x *.json *.zip test.js
 	aws lambda create-function \
 		--region $(REGION) \
@@ -102,15 +109,12 @@ upload:
 		--zip-file fileb://MyLambda.zip \
 		--handler MyLambda.handler \
 		--runtime nodejs \
+		--timeout 15 \
+		--memory-size 128 \
 		--role $(ARN)
 
 test:
 	@npm test
 
-###.PHONY: check-region
-#check-region:
-#ifndef REGION
-#    $(error REGION is undefined)
-#endif
 
 .PROXY: delete get invoke list list-event-sources update upload test

@@ -1,0 +1,13 @@
+{
+  "url": "https://mf-chsdi3.prod.bgdi.ch",
+  "path": "/rest/services/api/MapServer/identify",
+  "params": {
+    "geometryType": "esriGeometryEnvelope",
+    "geometry": "500000,100000,700000,300000",
+    "imageDisplay": "1000,1000,96",
+    "mapExtent": "500000,100000,700000,300000",
+    "tolerance": "1",
+    "layers": "all:ch.bafu.bundesinventare-bln",
+    "geometryFormat": "geojson"
+  }
+}
